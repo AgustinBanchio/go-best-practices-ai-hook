@@ -15,6 +15,8 @@ type LLMResponse struct {
 }
 
 func main() {
+
+	fmt.Println("Golang-Best-Practices Hook Running!")
 	files := os.Args[1:] // Files passed as arguments by pre-commit
 
 	if len(files) == 0 {

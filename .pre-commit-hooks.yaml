@@ -1,7 +1,8 @@
 - id: golang-best-practices-check
   name: Golang Best Practices Check
-  entry: ./golang_best_practices_hook
+  entry: ./golang_best_practices_check
   language: golang
-  files: \\.go$
+  files: \.go$
   pass_filenames: true
-  always_run: true
+  always_run: false
+  stages: [pre-commit]
