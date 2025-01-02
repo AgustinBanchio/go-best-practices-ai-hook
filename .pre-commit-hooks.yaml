@@ -1,8 +1,10 @@
 - id: golang-best-practices-check
   name: Golang Best Practices Check
-  entry: ./golang_best_practices_check
+  description: Checks your Go code with an LLM to see if it follows the best practices.
+  entry: golang-best-practices-check
+  types: [go]
   language: golang
-  files: \.go$
+  require_serial: true
   pass_filenames: true
   always_run: false
   stages: [pre-commit]

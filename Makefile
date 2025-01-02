@@ -1,2 +1,2 @@
 build:
-	go build -o golang_best_practices_check main.go
+	go build -o golang-best-practices-check main.go
