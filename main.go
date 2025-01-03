@@ -113,8 +113,7 @@ func queryLLM(filename, content string) (*LLMResponse, error) {
 	    Do NOT include any other field in the json response.
 		Suggestions need to be as short and concise as possible, there can be no suggestions if the file appears to be following the best practices. But always indicate suggestions if the file does not follow the best practices.
 		You are only given files that have been modified in the current commit so you will lack some context, do not criticize the lack of context. Only check for the best practices that you can observe in the file you are checking at the moment.
-		Do not criticize whether the logic makes sense only check for go best practices.
-		You will be given the best practices styleguide and the file content to check. You will reply with a json response.
+		Do not criticize whether the logic makes sense only check for go best practices. You will reply with a json response.
 		`),
 		Prompt: fmt.Sprintf("File to check:\nFilename: %s\nContent:\n%s", filename, content),
 		Format: "json",
