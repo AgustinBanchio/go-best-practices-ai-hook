@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"unicode/utf8"
 )
 
 var ollamaPort = 11435
@@ -21,7 +22,6 @@ type LLMResponse struct {
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	fmt.Println("Golang-Best-Practices Hook Running!")
 	files := os.Args[1:] // Files passed as arguments by pre-commit
 
 	if len(files) == 0 {
@@ -50,6 +50,11 @@ func main() {
 			continue
 		}
 
+		if utf8.RuneCountInString(string(content)) > 8000 {
+			fmt.Printf("Skipping file %s as it has more than 8000 characters\n", file)
+			continue
+		}
+
 		llmResponse, err := queryLLM(file, string(content))
 		if err != nil {
 			fmt.Printf("Error querying LLM for file %s: %v\n", file, err)
@@ -60,6 +65,7 @@ func main() {
 			warn = true
 			fmt.Printf("\nFile: %s does not follow best practices:\n", file)
 			fmt.Printf("Suggestions: %s\n", llmResponse.Suggestions)
+			fmt.Printf("--------------------------------------------\n")
 		}
 	}
 
@@ -96,15 +102,21 @@ type ollamaResponse struct {
 func queryLLM(filename, content string) (*LLMResponse, error) {
 
 	llmRequest := &ollamaRequest{
-		Model: "qwen2.5-coder:3b",
-		System: `You check go files given for best practices following the official style guide. You will reply in json format. Only reply with the json output and nothing more. The json response should have this format:
+		Model: "qwen2.5-coder:7b",
+		System: fmt.Sprintf(`You check go files given for best practices following the official style guide. You will reply in json format. Only reply with the json output and nothing more. The json response should have this format:
+			A "follows_best_practices" boolean fields and a "suggestions" string field. 
+			Example:
 			{
 				"follows_best_practices": false,
 				"suggestions": "The function name ParseYAMLConfig does not follow the Go best practices as it's repeating the package name bla bla bla..."
 			}
-		Suggestions need to be as short and concise as possible, there can be no suggestions if the file appears to be following the best practices.
-`,
-		Prompt: fmt.Sprintf("Filename: %s\nContent:\n%s", filename, content),
+	    Do NOT include any other field in the json response.
+		Suggestions need to be as short and concise as possible, there can be no suggestions if the file appears to be following the best practices. But always indicate suggestions if the file does not follow the best practices.
+		You are only given files that have been modified in the current commit so you will lack some context, do not criticize the lack of context. Only check for the best practices that you can observe in the file you are checking at the moment.
+		Do not criticize whether the logic makes sense only check for go best practices.
+		You will be given the best practices styleguide and the file content to check. You will reply with a json response.
+		`),
+		Prompt: fmt.Sprintf("File to check:\nFilename: %s\nContent:\n%s", filename, content),
 		Format: "json",
 		Stream: false,
 	}
@@ -131,7 +143,7 @@ func queryLLM(filename, content string) (*LLMResponse, error) {
 		return nil, fmt.Errorf("error reading response body %v", err)
 	}
 
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 
 	oResp := &ollamaResponse{}
 	err = json.Unmarshal(body, oResp)
@@ -139,7 +151,7 @@ func queryLLM(filename, content string) (*LLMResponse, error) {
 		return nil, fmt.Errorf("error unmarshalling response: %v", err)
 	}
 
-	fmt.Println(oResp)
+	//fmt.Println(oResp.Response)
 
 	llmResponse := &LLMResponse{}
 
